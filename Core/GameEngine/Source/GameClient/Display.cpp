@@ -47,7 +47,7 @@ Display::Display()
 	m_width = 0;
 	m_height = 0;
 	m_bitDepth = 0;
-	m_windowed = FALSE;
+	m_windowed = TRUE;
 	m_videoBuffer = nullptr;
 	m_videoStream = nullptr;
 	m_debugDisplayCallback = nullptr;
