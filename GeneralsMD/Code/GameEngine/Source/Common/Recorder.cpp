@@ -1639,7 +1639,7 @@ AsciiString RecorderClass::getLastReplayFileName()
 #endif
 
 	AsciiString filename;
-	if (rts::ClientInstance::getInstanceId() > 1u)
+	if (rts::ClientInstance::getInstanceId() >= 1u)
 	{
 		filename.format("%s_Instance%.2u", lastReplayFileName, rts::ClientInstance::getInstanceId());
 	}

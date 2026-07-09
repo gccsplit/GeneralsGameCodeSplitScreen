@@ -186,7 +186,7 @@ static void updateWindowTitle()
 
 	UnicodeString title;
 
-	if (rts::ClientInstance::getInstanceId() > 1u)
+	if (rts::ClientInstance::getInstanceId() >= 1u)
 	{
 		UnicodeString str;
 		str.format(L"Instance:%.2u", rts::ClientInstance::getInstanceId());

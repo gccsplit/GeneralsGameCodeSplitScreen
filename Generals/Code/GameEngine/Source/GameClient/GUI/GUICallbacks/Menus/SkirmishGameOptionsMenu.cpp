@@ -170,7 +170,7 @@ SkirmishPreferences::~SkirmishPreferences()
 
 Bool SkirmishPreferences::loadFromIniFile()
 {
-	if (rts::ClientInstance::getInstanceId() > 1u)
+	if (rts::ClientInstance::getInstanceId() >= 1u)
 	{
 		AsciiString fname;
 		fname.format("Skirmish_Instance%.2u.ini", rts::ClientInstance::getInstanceId());

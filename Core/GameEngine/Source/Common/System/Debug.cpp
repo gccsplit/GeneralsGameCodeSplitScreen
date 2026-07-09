@@ -387,7 +387,7 @@ void DebugInit(int flags)
 		strcpy(theLogFileNamePrev, dirbuf);
 		strlcat(theLogFileNamePrev, gAppPrefix, ARRAY_SIZE(theLogFileNamePrev));
 		strlcat(theLogFileNamePrev, DEBUG_FILE_NAME_PREV, ARRAY_SIZE(theLogFileNamePrev));
-		if (rts::ClientInstance::getInstanceId() > 1u)
+		if (rts::ClientInstance::getInstanceId() >= 1u)
 		{
 			size_t offset = strlen(theLogFileNamePrev);
 			snprintf(theLogFileNamePrev + offset, ARRAY_SIZE(theLogFileNamePrev) - offset, "_Instance%.2u", rts::ClientInstance::getInstanceId());
@@ -398,7 +398,7 @@ void DebugInit(int flags)
 		strcpy(theLogFileName, dirbuf);
 		strlcat(theLogFileName, gAppPrefix, ARRAY_SIZE(theLogFileNamePrev));
 		strlcat(theLogFileName, DEBUG_FILE_NAME, ARRAY_SIZE(theLogFileNamePrev));
-		if (rts::ClientInstance::getInstanceId() > 1u)
+		if (rts::ClientInstance::getInstanceId() >= 1u)
 		{
 			size_t offset = strlen(theLogFileName);
 			snprintf(theLogFileName + offset, ARRAY_SIZE(theLogFileName) - offset, "_Instance%.2u", rts::ClientInstance::getInstanceId());

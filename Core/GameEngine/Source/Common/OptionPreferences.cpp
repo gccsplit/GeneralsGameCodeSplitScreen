@@ -57,7 +57,7 @@ OptionPreferences::~OptionPreferences()
 
 Bool OptionPreferences::loadFromIniFile()
 {
-	if (rts::ClientInstance::getInstanceId() > 1u)
+	if (rts::ClientInstance::getInstanceId() >= 1u)
 	{
 		AsciiString fname;
 		fname.format("Options_Instance%.2u.ini", rts::ClientInstance::getInstanceId());

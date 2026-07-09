@@ -83,7 +83,7 @@ LANPreferences::~LANPreferences()
 
 Bool LANPreferences::loadFromIniFile()
 {
-	if (rts::ClientInstance::getInstanceId() > 1u)
+	if (rts::ClientInstance::getInstanceId() >= 1u)
 	{
 		AsciiString fname;
 		fname.format("Network_Instance%.2u.ini", rts::ClientInstance::getInstanceId());
@@ -109,7 +109,7 @@ UnicodeString LANPreferences::getUserName()
 		}
 	}
 
-	if (rts::ClientInstance::getInstanceId() > 1u)
+	if (rts::ClientInstance::getInstanceId() >= 1u)
 	{
 		// TheSuperHackers @feature Use the instance id as default user name
 		// to avoid duplicate names for multiple client instances.
