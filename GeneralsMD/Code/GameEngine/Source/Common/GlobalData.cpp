@@ -188,7 +188,6 @@ GlobalData* GlobalData::m_theOriginal = nullptr;
 #if PRESERVE_RETAIL_SCRIPTED_CAMERA
 	{ "CameraHeight",								INI::parseReal,				nullptr,			offsetof( GlobalData, m_cameraHeight ) },
 #endif
-	{ "MaxCameraHeight",						INI::parseReal,				nullptr,			offsetof( GlobalData, m_maxCameraHeight ) },
 	{ "MinCameraHeight",						INI::parseReal,				nullptr,			offsetof( GlobalData, m_minCameraHeight ) },
 	{ "TerrainHeightAtEdgeOfMap",					INI::parseReal,				nullptr,			offsetof( GlobalData, m_terrainHeightAtEdgeOfMap ) },
 	{ "UnitDamagedThreshold",				INI::parseReal,				nullptr,			offsetof( GlobalData, m_unitDamagedThresh ) },
@@ -852,7 +851,7 @@ GlobalData::GlobalData()
 	m_cameraHeight = 0.0f;
 #endif
 	m_minCameraHeight = 100.0f;
-	m_maxCameraHeight = 300.0f;
+	m_maxCameraHeight = 710.0f;
 	m_terrainHeightAtEdgeOfMap = 0.0f;
 
 	m_unitDamagedThresh = 0.5f;
