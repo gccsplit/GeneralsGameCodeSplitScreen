@@ -89,7 +89,7 @@ SkirmishBattleHonors::~SkirmishBattleHonors()
 
 Bool SkirmishBattleHonors::loadFromIniFile()
 {
-	if (rts::ClientInstance::getInstanceId() > 1u)
+	if (rts::ClientInstance::getInstanceId() >= 1u)
 	{
 		AsciiString fname;
 		fname.format("SkirmishStats_Instance%.2u.ini", rts::ClientInstance::getInstanceId());

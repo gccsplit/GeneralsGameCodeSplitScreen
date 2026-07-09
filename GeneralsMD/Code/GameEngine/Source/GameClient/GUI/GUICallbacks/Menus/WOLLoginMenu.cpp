@@ -143,7 +143,7 @@ GameSpyLoginPreferences::~GameSpyLoginPreferences()
 
 Bool GameSpyLoginPreferences::loadFromIniFile()
 {
-	if (rts::ClientInstance::getInstanceId() > 1u)
+	if (rts::ClientInstance::getInstanceId() >= 1u)
 	{
 		AsciiString fname;
 		fname.format("GameSpyLogin_Instance%.2u.ini", rts::ClientInstance::getInstanceId());
