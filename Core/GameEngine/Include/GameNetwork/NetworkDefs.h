@@ -228,6 +228,16 @@ static constexpr const UnsignedShort GENERALS_MAGIC_NUMBER = 0xF00D;
 // value to get their actual port number.
 static constexpr const Int NETWORK_BASE_PORT_NUMBER = 8088;
 
+// TheSuperHackers @feature Splitscreen multi-instance LAN networking.
+// Each local instance binds a distinct real port derived from its instance index, so several
+// instances on one machine can share a single real IP. Peers are identified by a stable
+// "virtual IP" derived from (real IP, instance offset); the Transport translates virtual IP
+// <-> real IP:port so the IP-keyed LAN protocol above it needs no changes. Lobby and in-game
+// use separate, non-overlapping port ranges (offset 0..LAN_MAX_LOCAL_INSTANCES-1).
+static constexpr const UnsignedShort LAN_LOBBY_PORT_BASE = 8086;
+static constexpr const UnsignedShort LAN_INGAME_PORT_BASE = 8100;
+static constexpr const UnsignedInt LAN_MAX_LOCAL_INSTANCES = 8;
+
 // the singleton
 class NetworkInterface;
 extern NetworkInterface *TheNetwork;

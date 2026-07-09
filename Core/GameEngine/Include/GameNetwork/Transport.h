@@ -31,6 +31,8 @@
 #include "GameNetwork/udp.h"
 #include "GameNetwork/NetworkDefs.h"
 
+#include <map>
+
 /**
  * The transport layer handles the UDP socket for the game, and will packetize and
  * de-packetize multiple ACK/CommandPacket/etc packets into larger aggregates.
@@ -58,6 +60,14 @@ public:
 
 	Bool allowBroadcasts(Bool val) { if (!m_udpsock) return false; return (m_udpsock->AllowBroadcasts(val))?true:false; }
 
+	// TheSuperHackers @feature Splitscreen multi-instance LAN. When enabled, addresses seen by
+	// callers of this transport are "virtual IPs" (stable per-instance identities); the transport
+	// binds/sends on real IP:port and translates transparently. See NetworkDefs.h.
+	void enableVirtualAddressing(UnsignedShort portBase); ///< Turn on virtual<->real translation. portBase is the offset-0 real port.
+	Bool isVirtualAddressing() const { return m_virtualAddressing; }
+	UnsignedShort lookupRealPort(UnsignedInt virtualIP) const; ///< Last real source port learned for a virtual IP, or 0 if unknown.
+	static UnsignedInt makeVirtualIP(UnsignedInt realIP, UnsignedInt instanceOffset); ///< Reversible: applying twice with the same offset returns the input.
+
 	// Latency insertion and packet loss
 	void setLatency( Bool val ) { m_useLatency = val; }
 	void setPacketLoss( Bool val ) { m_usePacketLoss = val; }
@@ -81,6 +91,12 @@ public:
 private:
 	Bool m_winsockInit;
 	UDP *m_udpsock;
+
+	// TheSuperHackers @feature Splitscreen multi-instance LAN virtual addressing state.
+	struct RealEndpoint { UnsignedInt ip; UnsignedShort port; };
+	Bool m_virtualAddressing;
+	UnsignedShort m_virtualPortBase;
+	std::map<UnsignedInt, RealEndpoint> m_virtualToReal; ///< virtual IP -> last known real endpoint (learned on receive)
 
 	// Latency insertion and packet loss
 	Bool m_useLatency;
