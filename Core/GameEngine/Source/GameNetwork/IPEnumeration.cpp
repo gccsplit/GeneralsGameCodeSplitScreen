@@ -96,18 +96,7 @@ EnumeratedIP * IPEnumeration::getAddresses()
 		DEBUG_LOG(("gethostbyname returns oddly-sized IP addresses!"));
 		return nullptr;
 	}
-
-	// TheSuperHackers @feature Add one unique local host IP address for each multi client instance.
-	if (rts::ClientInstance::isMultiInstance())
-	{
-		const UnsignedInt id = rts::ClientInstance::getInstanceId();
-		addNewIP(
-			127,
-			(UnsignedByte)(id >> 16),
-			(UnsignedByte)(id >> 8),
-			(UnsignedByte)(id));
-	}
-
+	
 	// construct a list of addresses
 	int numAddresses = 0;
 	char *entry;

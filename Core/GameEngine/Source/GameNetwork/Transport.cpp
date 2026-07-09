@@ -71,6 +71,8 @@ Transport::Transport()
 {
 	m_winsockInit = false;
 	m_udpsock = nullptr;
+	m_virtualAddressing = false;
+	m_virtualPortBase = 0;
 }
 
 Transport::~Transport()
@@ -171,6 +173,27 @@ void Transport::reset()
 	}
 }
 
+void Transport::enableVirtualAddressing(UnsignedShort portBase)
+{
+	m_virtualAddressing = true;
+	m_virtualPortBase = portBase;
+}
+
+UnsignedInt Transport::makeVirtualIP(UnsignedInt realIP, UnsignedInt instanceOffset)
+{
+	// Reversible: XOR the instance offset into the high nibble. Applying twice with the
+	// same offset returns the input, so the same helper maps virtual<->real either way.
+	return realIP ^ (instanceOffset << 28);
+}
+
+UnsignedShort Transport::lookupRealPort(UnsignedInt virtualIP) const
+{
+	std::map<UnsignedInt, RealEndpoint>::const_iterator it = m_virtualToReal.find(virtualIP);
+	if (it == m_virtualToReal.end())
+		return 0;
+	return it->second.port;
+}
+
 Bool Transport::update()
 {
 	Bool retval = TRUE;
@@ -222,8 +245,52 @@ Bool Transport::doSend() {
 			// But the max network message size needs to include the bytes of the transport message header and equal the max udp payload
 			// Therefore, transmitted data needs to add the extra bytes of the network header to the payloads length
 			int bytesToSend = m_outBuffer[i].length + sizeof(TransportMessageHeader);
+
+			UnsignedInt sendAddr = m_outBuffer[i].addr;
+			UnsignedShort sendPort = m_outBuffer[i].port;
+			if (m_virtualAddressing)
+			{
+				if (m_outBuffer[i].addr == INADDR_BROADCAST)
+				{
+					Bool anySent = FALSE;
+					for (UnsignedInt o = 0; o < LAN_MAX_LOCAL_INSTANCES; ++o)
+					{
+						if (m_udpsock->Write((unsigned char *)(&m_outBuffer[i]), bytesToSend,
+								INADDR_BROADCAST, (UnsignedShort)(m_virtualPortBase + o)) > 0)
+							anySent = TRUE;
+					}
+					if (anySent)
+					{
+						m_outgoingPackets[m_statisticsSlot]++;
+						m_outgoingBytes[m_statisticsSlot] += m_outBuffer[i].length + sizeof(TransportMessageHeader);
+						m_outBuffer[i].length = 0;  // Remove from queue
+					}
+					else
+					{
+						retval = FALSE;
+					}
+					continue;
+				}
+
+				std::map<UnsignedInt, RealEndpoint>::const_iterator it = m_virtualToReal.find(m_outBuffer[i].addr);
+				if (it != m_virtualToReal.end())
+				{
+					sendAddr = it->second.ip;
+					sendPort = it->second.port;
+				}
+				else
+				{
+					UnsignedInt offset = 0;
+					if (m_outBuffer[i].port >= m_virtualPortBase &&
+							(UnsignedInt)(m_outBuffer[i].port - m_virtualPortBase) < LAN_MAX_LOCAL_INSTANCES)
+						offset = m_outBuffer[i].port - m_virtualPortBase;
+					sendAddr = makeVirtualIP(m_outBuffer[i].addr, offset);
+					sendPort = (UnsignedShort)(m_virtualPortBase + offset);
+				}
+			}
+
 			// Send this message
-			if ((bytesSent = m_udpsock->Write((unsigned char *)(&m_outBuffer[i]), bytesToSend, m_outBuffer[i].addr, m_outBuffer[i].port)) > 0)
+			if ((bytesSent = m_udpsock->Write((unsigned char *)(&m_outBuffer[i]), bytesToSend, sendAddr, sendPort)) > 0)
 			{
 				//DEBUG_LOG(("Sending %d bytes to %d.%d.%d.%d:%d", bytesToSend, PRINTF_IP_AS_4_INTS(m_outBuffer[i].addr), m_outBuffer[i].port));
 				m_outgoingPackets[m_statisticsSlot]++;
@@ -330,6 +397,22 @@ Bool Transport::doRecv()
 		m_incomingPackets[m_statisticsSlot]++;
 		m_incomingBytes[m_statisticsSlot] += len;
 
+		UnsignedInt msgAddr = ntohl(from.sin_addr.S_un.S_addr);
+		UnsignedShort msgPort = ntohs(from.sin_port);
+		if (m_virtualAddressing)
+		{
+			UnsignedInt offset = (UnsignedInt)(msgPort - m_virtualPortBase);
+			if (msgPort >= m_virtualPortBase && offset < LAN_MAX_LOCAL_INSTANCES)
+			{
+				UnsignedInt virtualIP = makeVirtualIP(msgAddr, offset);
+				RealEndpoint ep;
+				ep.ip = msgAddr;
+				ep.port = msgPort;
+				m_virtualToReal[virtualIP] = ep;
+				msgAddr = virtualIP;
+			}
+		}
+
 		for (int i=0; i<MAX_MESSAGES; ++i)
 		{
 #if defined(RTS_DEBUG)
@@ -344,8 +427,8 @@ Bool Transport::doRecv()
 						(Int)(TheGlobalData->m_latencyAmplitude * sin(now * TheGlobalData->m_latencyPeriod)) +
 						GameClientRandomValue(-TheGlobalData->m_latencyNoise, TheGlobalData->m_latencyNoise);
 					m_delayedInBuffer[i].message.length = incomingMessage.length;
-					m_delayedInBuffer[i].message.addr = ntohl(from.sin_addr.S_un.S_addr);
-					m_delayedInBuffer[i].message.port = ntohs(from.sin_port);
+					m_delayedInBuffer[i].message.addr = msgAddr;
+					m_delayedInBuffer[i].message.port = msgPort;
 					memcpy(&m_delayedInBuffer[i].message, buf, len);
 					break;
 				}
@@ -357,8 +440,8 @@ Bool Transport::doRecv()
 				{
 					// Empty slot; use it
 					m_inBuffer[i].length = incomingMessage.length;
-					m_inBuffer[i].addr = ntohl(from.sin_addr.S_un.S_addr);
-					m_inBuffer[i].port = ntohs(from.sin_port);
+					m_inBuffer[i].addr = msgAddr;
+					m_inBuffer[i].port = msgPort;
 					memcpy(&m_inBuffer[i], buf, len);
 					break;
 				}
