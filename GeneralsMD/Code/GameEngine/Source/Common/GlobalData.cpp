@@ -95,7 +95,6 @@ GlobalData* GlobalData::m_theOriginal = nullptr;
 	{ "UseHalfHeightMap",					INI::parseBool,				nullptr,			offsetof( GlobalData, m_useHalfHeightMap ) },
 
 
-	{ "DrawEntireTerrain",					INI::parseBool,				nullptr,			offsetof( GlobalData, m_drawEntireTerrain ) },
 	{ "TerrainLOD",									INI::parseIndexList,	TerrainLODNames,	offsetof( GlobalData, m_terrainLOD ) },
 	{ "TerrainLODTargetTimeMS",			INI::parseInt,				nullptr,			offsetof( GlobalData, m_terrainLODTargetTimeMS ) },
 	{ "RightMouseAlwaysScrolls",		INI::parseBool,				nullptr,			offsetof( GlobalData, m_rightMouseAlwaysScrolls ) },
@@ -830,7 +829,7 @@ GlobalData::GlobalData()
 	m_getHealedAnimationName.clear();
 	m_specialPowerViewObjectName.clear();
 
-	m_drawEntireTerrain = FALSE;
+	m_drawEntireTerrain = TRUE;
 	m_maxParticleCount = 0;
 	m_maxFieldParticleCount = 30;
 
