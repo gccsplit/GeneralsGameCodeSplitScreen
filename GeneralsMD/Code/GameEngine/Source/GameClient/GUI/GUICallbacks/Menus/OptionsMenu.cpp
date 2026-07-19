@@ -1454,6 +1454,10 @@ void OptionsMenuInit( WindowLayout *layout, void *userData )
 //			checkAudioHardware->winEnable(FALSE);
 	}
 
+	if (comboBoxResolution)
+	{
+		comboBoxResolution->winHide(TRUE);
+	}
 
 	TheWindowManager->winSetModal(parent);
 	ignoreSelected = FALSE;
