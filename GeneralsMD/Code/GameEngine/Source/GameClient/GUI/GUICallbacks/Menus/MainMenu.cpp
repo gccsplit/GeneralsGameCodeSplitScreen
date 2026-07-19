@@ -566,6 +566,31 @@ void MainMenuInit( WindowLayout *layout, void *userData )
 //
 	layout->hide( FALSE );
 
+	if (buttonSinglePlayer)
+	{
+		buttonSinglePlayer->winHide(TRUE);
+		buttonSinglePlayer->winEnable(FALSE);
+		buttonSinglePlayer->winSetText(L"");
+		for (Int i = 0; i < 3; ++i)
+		{
+			buttonSinglePlayer->winSetEnabledImage(i, nullptr);
+			buttonSinglePlayer->winSetDisabledImage(i, nullptr);
+			buttonSinglePlayer->winSetHiliteImage(i, nullptr);
+		}
+	}
+	if (buttonLoadReplay)
+	{
+		buttonLoadReplay->winHide(TRUE);
+		buttonLoadReplay->winEnable(FALSE);
+		buttonLoadReplay->winSetText(L"");
+		for (Int i = 0; i < 3; ++i)
+		{
+			buttonLoadReplay->winSetEnabledImage(i, nullptr);
+			buttonLoadReplay->winSetDisabledImage(i, nullptr);
+			buttonLoadReplay->winSetHiliteImage(i, nullptr);
+		}
+	}
+
 	/*
 	if (!checkedForUpdate)
 	{
@@ -1342,12 +1367,10 @@ WindowMsgHandledType MainMenuSystem( GameWindow *window, UnsignedInt msg,
 				if(dontAllowTransitions)
 					break;
 				dontAllowTransitions = TRUE;
-				//buttonPushed = TRUE;
-				buttonPushed = FALSE;
-				dropDownWindows[DROPDOWN_MULTIPLAYER]->winHide(FALSE);
-				TheTransitionHandler->remove("MainMenuDefaultMenu");
-				TheTransitionHandler->reverse("MainMenuDefaultMenuBack");
-				TheTransitionHandler->setGroup("MainMenuMultiPlayerMenu");
+				buttonPushed = TRUE;
+				TheShell->push( "Menus/LanLobbyMenu.wnd" );
+
+				TheScriptEngine->signalUIInteract(TheShellHookNames[SHELL_SCRIPT_HOOK_MAIN_MENU_NETWORK_SELECTED]);
 			}
 			else if( controlID == buttonLoadReplayID)
 			{
