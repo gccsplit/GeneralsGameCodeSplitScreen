@@ -1399,6 +1399,12 @@ void OptionsMenuInit( WindowLayout *layout, void *userData )
 	// set music volume slider
 	GadgetSliderSetPosition( sliderMusicVolume, REAL_TO_INT(pref->getMusicVolume()) );
 
+	if (rts::ClientInstance::getInstanceId() >= 2u)
+	{
+		sliderMusicVolume->winHide(TRUE);
+	}
+
+
 	//set SFX volume slider
 	Real maxVolume = MAX( pref->getSoundVolume(), pref->get3DSoundVolume() );
 	GadgetSliderSetPosition( sliderSFXVolume, REAL_TO_INT( maxVolume ) );
