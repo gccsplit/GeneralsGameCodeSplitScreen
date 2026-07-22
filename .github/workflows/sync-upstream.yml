@@ -1,0 +1,77 @@
+name: Sync fork with upstream (rebase)
+
+# Keeps gccsplit/GeneralsGameCodeSplitScreen:main up to date with the parent
+# repo TheSuperHackers/GeneralsGameCode:main once per day.
+#
+# Unlike GitHub's native "Sync fork" (merge-upstream), this REBASES our local
+# splitscreen commits on top of upstream/main and force-pushes. History stays
+# linear -- upstream commits, then our commits replayed on top -- with NO
+# per-sync merge commit. Our commits keep their content but are re-created with
+# new SHAs whenever upstream advances. Old merge commits from the previous
+# merge-based sync are flattened away on the first run.
+#
+# A rebase conflict fails the run (red X + notification). main is left untouched
+# (nothing is pushed); resolve it locally, then push:
+#   git remote add upstream https://github.com/TheSuperHackers/GeneralsGameCode.git
+#   git fetch upstream main
+#   git checkout main && git rebase upstream/main
+#   # ...fix conflicts, git rebase --continue...
+#   git push --force-with-lease origin main
+#
+# NOTE: this force-pushes main daily. Anyone who cloned the fork must
+#   git fetch origin && git reset --hard origin/main
+# and any branches/PRs based on main must be rebased onto the new main.
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # 06:00 UTC daily (GitHub may delay under load)
+  workflow_dispatch: {}    # allow manual "Run workflow"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-upstream
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout fork main (full history)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Rebase local commits onto upstream main
+        run: |
+          set -euo pipefail
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git remote add upstream https://github.com/TheSuperHackers/GeneralsGameCode.git
+          git fetch --no-tags upstream main
+
+          before="$(git rev-parse HEAD)"
+
+          # Replay our splitscreen commits on top of upstream/main. Commits that
+          # already landed upstream are dropped by patch-id, and old merge commits
+          # from the previous merge-based sync are flattened.
+          if ! git rebase upstream/main; then
+            git rebase --abort || true
+            echo "::error::Rebase onto upstream/main hit a conflict; main was NOT changed. Resolve locally and push --force-with-lease (see workflow header)."
+            exit 1
+          fi
+
+          after="$(git rev-parse HEAD)"
+          if [ "$before" = "$after" ]; then
+            echo "Already linear on top of upstream/main; nothing to push."
+            exit 0
+          fi
+
+          echo "Rebased $before -> $after; force-pushing main."
+          git push --force-with-lease origin main
